@@ -31,8 +31,8 @@ fn main() {
 	pair_vec.push("BTC_XRP".to_string());
 	//api Key
 
-    println!("This robot will automatically buy a pair you will select on Poloniex\nYou will enter a maxmimum buy amount per interval\nand a frequency to buy, \n
-    	every x seconds the robot will buy up to the maximum quantity");
+    println!("This robot will automatically sell a pair you will select on Poloniex\nYou will enter a maxmimum sell amount per interval\nand a frequency to buy, \n
+    	every x seconds the robot will sell up to the maximum quantity");
     println!("Enter Your Poloniex Api Key");
     let mut input1 = String::new();
     let stdin1 = io::stdin();
@@ -65,7 +65,7 @@ fn main() {
 
     let pair_ind2: usize = pair_ind.parse().ok().expect("pair index is not a number");
 
-    println!("Enter a maximum position limit in the alt coin quantity \n the bot will buy only up to this much at a time");
+    println!("Enter a maximum position limit in the alt coin quantity \n the bot will sell only up to this much at a time");
     let mut input3 = String::new();
     let stdin3 = io::stdin();
     stdin3.lock().read_line(&mut input3).unwrap();
@@ -82,8 +82,8 @@ fn main() {
     let frequency = input4.trim_right_matches("\n").to_string();
 
     let frequency: u64 = frequency.parse().ok().expect("frequency is not a number");
-
     
+
     println!("for margin trading enter 1 \n for non margin trading enter 0");
     let mut input6 = String::new();
     let stdin6 = io::stdin();
@@ -92,7 +92,6 @@ fn main() {
     let margin_ind = input6.trim_right_matches("\n").to_string();
 
     let margin_ind: u64 = margin_ind.parse().ok().expect("frequency is not a number");
-    
 
 	let mut xyz = 0;
 	while xyz == 0 {
@@ -100,28 +99,27 @@ fn main() {
 		let all_orders = returnOrderBook(pair_vec[pair_ind2].to_string());
 		let json = Json::from_str(&all_orders).unwrap();
 
-   		let ticker_result = json.find_path(&[&"asks"]).unwrap();
+   		let ticker_result = json.find_path(&[&"bids"]).unwrap();
 
 		let ticker_result_string: String = json::encode(&ticker_result).unwrap();
 
-		let ask_results: Vec<(f64, f64)> = json::decode(&ticker_result_string).unwrap();
+		let bids_results: Vec<(f64, f64)> = json::decode(&ticker_result_string).unwrap();
 
 
 		let timespec = time::get_time();
 		let mut mills = timespec.sec * 100;
 
-		if ask_results[0].1 < postion_clone.parse().ok().expect("max position turned out to not be a number either") {
+		if bids_results[0].1 < postion_clone.parse().ok().expect("max position turned out to not be a number either") {
             if margin_ind == 0 {
-                buy(the_api_keyclone.to_string(), the_secret_trimmed, pair_vec[pair_ind2].to_string(), ask_results[0].0.to_string(), ask_results[0].1.to_string(), mills.to_string());
+                sell(the_api_keyclone.to_string(), the_secret_trimmed, pair_vec[pair_ind2].to_string(), bids_results[0].0.to_string(), bids_results[0].1.to_string(), mills.to_string());
             } else {
-                marginBuy(the_api_keyclone.to_string(), the_secret_trimmed, pair_vec[pair_ind2].to_string(), ask_results[0].0.to_string(), ask_results[0].1.to_string(), mills.to_string());
+                marginSell(the_api_keyclone.to_string(), the_secret_trimmed, pair_vec[pair_ind2].to_string(), bids_results[0].0.to_string(), bids_results[0].1.to_string(), mills.to_string());
             }
 		}	else {
             if margin_ind == 0 {
-                buy(the_api_keyclone.to_string(), the_secret_trimmed, pair_vec[pair_ind2].to_string(), ask_results[0].0.to_string(), maxposition.to_string(), mills.to_string());
+                sell(the_api_keyclone.to_string(), the_secret_trimmed, pair_vec[pair_ind2].to_string(), bids_results[0].0.to_string(), maxposition.to_string(), mills.to_string());
             } else {
-                marginBuy(the_api_keyclone.to_string(), the_secret_trimmed, pair_vec[pair_ind2].to_string(), ask_results[0].0.to_string(), maxposition.to_string(), mills.to_string());
-
+                marginSell(the_api_keyclone.to_string(), the_secret_trimmed, pair_vec[pair_ind2].to_string(), bids_results[0].0.to_string(), maxposition.to_string(), mills.to_string());
             }
 		}
 
